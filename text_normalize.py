@@ -142,7 +142,9 @@ CONTRACTION_MAP = {
 
 stopword_list = nltk.corpus.stopwords.words('english')
 tokenizer = ToktokTokenizer()
-nlp = spacy.load('en_core_web_md')
+# nlp = spacy.load('en_core_web_md')
+import en_core_web_sm
+nlp = en_core_web_sm.load()
 
 
 def strip_html_tags(text):
