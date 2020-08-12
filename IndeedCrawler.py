@@ -28,7 +28,7 @@ def getInfo(div: BeautifulSoup) -> Dict:
     return temp_info
 
 
-def getJobPost(URL: str = 'http://www.indeed.com/jobs?', queries: dict = None) -> BeautifulSoup:
+def getJobPost(URL: str='http://www.indeed.com/jobs?', queries: dict=None) -> BeautifulSoup:
     """[Get list of job postings from indeed]
 
     Keyword Arguments:
