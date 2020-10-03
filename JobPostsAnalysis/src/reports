@@ -1,0 +1,8 @@
+INFO: 2020-10-02 19:45:18,273: 
+    	- [1m[4mLocations to crawl[0m: [92m['Houston, TX', 'Dallas, TX', 'Dallas-Fort Worth, TX', 'San Francisco, CA', 'New York, NY', 'Philadelphia, PA', 'Pittsburgh, PA', 'Boston, MA'][0m
+ 
+    	- [1m[4mNumber of Pages to crawl per query[0m: [92m10[0m
+ 
+    	- [1m[4mQueries parameters[0m: [92m{'q': 'data scientist', 'l': 'Houston, TX', 'explvl': 'entry_level', 'jt': 'fulltime', 'start': 0}[0m
+
+    	- [1m[4mJob titles[0m: [92m['data scientist', ' data analyst', ' machine learning engineer', ' software engineer', ' data analyst', ' data engineer'][0m

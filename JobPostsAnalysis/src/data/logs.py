@@ -30,7 +30,7 @@ def log(path, filename, level):
     handler = logging.FileHandler(log_file)
 
     # set the logging level for log file
-    handler.setLevel(logging.INFO)
+    handler.setLevel(logging.DEBUG)
     
     # create a logging format
     formatter = logging.Formatter(file_logging_format)

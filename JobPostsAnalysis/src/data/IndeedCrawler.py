@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import time, requests, argparse, json
 from typing import List, Dict, Union
+from config import CONFIG
 from logs import log
 from color_scheme import bcolors
 
@@ -23,7 +24,7 @@ def get_args():
     parser.add_argument('--LOG_FILENAME', '-logfname', type=str, default='logs.log',
                         help='name of log file')
     parser.add_argument('--LOCATIONS', '-locs', type=str, default='''Houston, TX, Dallas, TX, Dallas-Fort Worth, TX, San Francisco, CA, New York, NY, Philadelphia, PA, Pittsburgh, PA, Boston, MA, Washington, DC''', 
-                        help='city and state seperated by comma (format defined by Indeed l paramter')
+                        help='cities and states to crawl seperated by comma (format defined by Indeed l paramter')
     parser.add_argument('--PAGE', '-pg', type=int, default=10,
                         help='number of pages to crawl for each query')
     parser.add_argument('--PARAMS', '-q', action=ParseKwargs, nargs='*',
@@ -109,7 +110,7 @@ class Crawler():
 
 # Main 
 def main(args):
-    logger = log(path=args.LOG_PATH, filename=args.LOG_FILENAME, level=args.LOGLVL)
+    logger = log(path=str(CONFIG.log_path), filename=args.LOG_FILENAME, level=args.LOGLVL)
     start = time.time()
     crawler = Crawler()
     no_jobs = 0
@@ -168,3 +169,4 @@ if __name__ == "__main__":
     parser = get_args()
     args = parser.parse_args()
     main(args)
+
