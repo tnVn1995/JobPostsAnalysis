@@ -1,6 +1,7 @@
 ## Strip html tag
 import re
 import nltk
+nltk.download('stopwords')
 from bs4 import BeautifulSoup
 from typing import List
 import multiprocessing as mp

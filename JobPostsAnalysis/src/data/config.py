@@ -1,7 +1,7 @@
 from pathlib import Path
 
 class CONFIG:
-    base = Path(__file__).parent.parent
+    base = Path(__file__).parent.parent.parent
     data_path = base / 'data'
     log_path = base / 'reports'
 

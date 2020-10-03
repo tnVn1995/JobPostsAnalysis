@@ -2,13 +2,15 @@
 from bs4 import BeautifulSoup
 import pandas as pd
 import time, requests, argparse, json
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Optional
 from config import CONFIG
+import logging
 from logs import log
 from color_scheme import bcolors
 
 titles = 'data scientist, data analyst, machine learning engineer, software engineer, data analyst, data engineer'
 class ParseKwargs(argparse.Action):
+    """Allow inputs to be passes like dictionary in parser"""
     def __call__(self, parser, namespace, values, option_string=None):
         setattr(namespace, self.dest, dict())
         for value in values:
@@ -36,8 +38,10 @@ def get_args():
 
 class Crawler():
     """Job Posts crawler from Indeed"""
-    
-    def getInfo(div:BeautifulSoup) -> Dict:
+    def __init__(self, logger:logging.RootLogger) -> None:
+        self.logger = logger
+
+    def getInfo(self, div:BeautifulSoup) -> Dict:
         '''Take input as a bs4 tag and return a dict with information about
         a job posting
         Input
@@ -59,7 +63,7 @@ class Crawler():
         return temp_info
 
 
-    def getJobPost(URL:str='http://www.indeed.com/jobs?', queries:dict=None) -> BeautifulSoup:
+    def getJobPost(self, URL:str='http://www.indeed.com/jobs?', queries:Optional[dict]=None) -> BeautifulSoup:
         """[Get list of job postings from indeed]
 
         Keyword Arguments:
@@ -70,19 +74,21 @@ class Crawler():
         Returns:
             BeautifulSoup -- [description]
         """
+        divs = None
         try:
             page = requests.get(URL, params=queries)
         except Exception as e:
-            print(e)
+            self.logger.debug(f"Server's response: {page.status_code}")
+            self.logger.error(e)
         else:
             if page == None:
-                print('Not found page')
+                self.logger.error('Not found page')
             else:
                 soup = BeautifulSoup(page.text, 'html.parser')
-        divs = soup.find_all(name='div', attrs={'data-tn-component': 'organicJob'})
+                divs = soup.find_all(name='div', attrs={'data-tn-component': 'organicJob'})
         return divs
 
-    def get_jobdes(summary_links:List[str], base_web:str='https://www.indeed.com') -> List[str]:
+    def get_jobdes(self, summary_links:List[str], base_web:str='https://www.indeed.com') -> List[str]:
         """[Get job descriptions from Indeed]
 
         Args:
@@ -101,8 +107,8 @@ class Crawler():
                 div = soup.find_all('div', attrs={'id': 'jobDescriptionText'})
                 summaries.append([link, div[0].text])
         except IndexError:
-            print('Here\'s what div looks like\n:', div)
-            print('URL:', link)
+            self.logger.error('Here\'s what div looks like\n:', div)
+            self.logger.error('URL:', link)
         return pd.DataFrame(summaries, columns = ['links', 'description'])
 
 
@@ -111,8 +117,9 @@ class Crawler():
 # Main 
 def main(args):
     logger = log(path=str(CONFIG.log_path), filename=args.LOG_FILENAME, level=args.LOGLVL)
+    logger.debug(type(logger))
     start = time.time()
-    crawler = Crawler()
+    crawler = Crawler(logger=logger)
     no_jobs = 0
     start_page = 0  # one input argument
     end_page = 10  # one input argument
@@ -141,29 +148,36 @@ def main(args):
     \t- {bcolors.BOLD}{bcolors.UNDERLINE}Queries parameters{bcolors.ENDC}: {bcolors.OKGREEN}{params}{bcolors.ENDC}\n
     \t- {bcolors.BOLD}{bcolors.UNDERLINE}Job titles{bcolors.ENDC}: {bcolors.OKGREEN}{titles}{bcolors.ENDC}''')
 
+
+
     # URL = 'https://www.indeed.com/jobs?q=Data+Scientist&l=Texas&explvl=entry_level'
 
-
-# TODO: Test the script functionality 
-    # for l in locations:
-    #     for t in titles:
-    #         for page in range(start_page, end_page):
-    #             params['q'] = t
-    #             params['l'] = l
-    #             params['start'] = page * no_jobs
-    #             print('[INFO] Getting information from the provided URL...')
-    #             divs = crawler.getJobPost(queries=params)
-    #             no_jobss = len(divs)
-    #             print(f'[INFO] THe number of job postings found is {no_jobss}')
-    #             for div in divs:
-    #                 temp_info = crawler.getInfo(div)
-    #                 JobInfo.append(temp_info)
-    #             no_jobs = no_jobss
-    #             print(f"[INFO] Done scraping for position {params['q']} at {params['l']}, job number from {params['start']}")
-    #             print(f"[INFO] Continue with next query")
-    # data = pd.DataFrame(JobInfo)
-    # data = data.drop_duplicates()
-    # print("[INFO] Done scraping from Indeed")
+    print('\t- Starting Crawling ...')
+    # TODO: Fix crawler to scrape from all locations instead of just TX
+# # TODO: Parallelizing web scraping
+    for l in locations:
+        for t in titles:
+            for page in range(start_page, end_page):
+                params['q'] = t
+                params['l'] = l
+                params['start'] = page * no_jobs
+                logger.info(' Getting information from the provided URL...')
+                divs = crawler.getJobPost(queries=params)
+                no_jobss = len(divs)
+                logger.info(f' The number of job postings found is {no_jobss}')
+                for div in divs:
+                    temp_info = crawler.getInfo(div)
+                    JobInfo.append(temp_info)
+                no_jobs = no_jobss
+                logger.info(f" Done scraping for position {params['q']} at {params['l']}, job number from {params['start']}")
+                logger.info(f" Continue with next query")
+    data = pd.DataFrame(JobInfo)
+    data = data.drop_duplicates()
+    logger.critical(f'Saving raw data to {str(CONFIG.data_path / "raw")}...')
+    data.to_csv(str(CONFIG.data_path / 'raw') + '/jobpostsRaw.csv', index=False)
+    time.sleep(1)
+    logger.info("Done scraping from Indeed!")
+    logger.critical(f'{bcolors.BOLD}{bcolors.GREEN}{bcolors.UNDERLINE}It takes {(time.time() - start) / 60: .2f} minutes for execution{bcolors.ENDC}')
 
 if __name__ == "__main__":
     parser = get_args()
