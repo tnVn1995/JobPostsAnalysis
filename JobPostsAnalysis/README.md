@@ -11,6 +11,19 @@ NLP analysis of Indeed job posts
 
   Data is scraped directly from [Indeed](https://www.indeed.com/) using BeautifulSoup and Python. The data include two files. The IndeedJobPosts.csv file contains information about job title, company name, location and the url link for job description. The JobDescription contains information about the job description for each url link from the IndeedJobPosts.csv. The job postings are scraped within a valid time period defined by Indeed (jobs that are still valid).
 
+# Requirements
+
+Run the following commands to setup environment (make sure Anaconda is installed)
+
+> make create_environment
+
+Activate the environment
+
+> conda activate JobPostsAnalysis
+
+Run script to scrape from Indeed
+
+> make Indeedscrape
 
 Project Organization
 ------------
@@ -28,16 +41,14 @@ Project Organization
     │
     ├── models             <- Trained and serialized models, model predictions, or model summaries
     │
-    ├── notebooks          <- Jupyter notebooks. Naming convention is a number (for ordering),
-    │                         the creator's initials, and a short `-` delimited description, e.g.
-    │                         `1.0-jqp-initial-data-exploration`.
-    │
+    ├── notebooks          <- Jupyter notebooks. 
+    │   └── JobPostsAnalysis <- analyzing job posts from Indeed
     ├── references         <- Data dictionaries, manuals, and all other explanatory materials.
     │
     ├── reports            <- Generated analysis as HTML, PDF, LaTeX, etc.
     │   └── figures        <- Generated graphics and figures to be used in reporting
     │
-    ├── requirements.txt   <- The requirements file for reproducing the analysis environment, e.g.
+    ├── environment.yml   <- The requirements file for reproducing the analysis environment, e.g.
     │                         generated with `pip freeze > requirements.txt`
     │
     ├── setup.py           <- makes project pip installable (pip install -e .) so src can be imported
@@ -45,18 +56,16 @@ Project Organization
     │   ├── __init__.py    <- Makes src a Python module
     │   │
     │   ├── data           <- Scripts to download or generate data
-    │   │   └── make_dataset.py
-    │   │
+    │   │   └── async <- in progress 
+    │   │   └── sequential < scripts to sequentially scrape job posts from Indeed
+    │   │        └── IndeedCrawler.py <- main script to crawl job posts from Indeed 
+    |   |       
     │   ├── features       <- Scripts to turn raw data into features for modeling
-    │   │   └── build_features.py
+    │   │   └── text_normalize <- feature preprocessing text scripts
     │   │
     │   ├── models         <- Scripts to train models and then use trained models to make
-    │   │   │                 predictions
-    │   │   ├── predict_model.py
-    │   │   └── train_model.py
     │   │
     │   └── visualization  <- Scripts to create exploratory and results oriented visualizations
-    │       └── visualize.py
     │
     └── tox.ini            <- tox file with settings for running tox; see tox.readthedocs.io
 

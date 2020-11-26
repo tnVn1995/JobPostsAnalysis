@@ -24,8 +24,10 @@ endif
 requirements: test_environment
 	$(PYTHON_INTERPRETER) -m pip install -U pip setuptools wheel
 	$(PYTHON_INTERPRETER) -m pip install -r requirements.txt
+
 conda: test_environment
 	conda env create --file environment.yml
+	
 ## Make Dataset
 data: requirements, environment
 	$(PYTHON_INTERPRETER) src/data/make_dataset.py data/raw data/processed
@@ -34,6 +36,9 @@ data: requirements, environment
 clean:
 	find . -type f -name "*.py[co]" -delete
 	find . -type d -name "__pycache__" -delete
+
+Indeed_scrape:
+	$(PYTHON_INTERPRETER) src/data/sequential/IndeedCrawler.py
 
 ## Lint using flake8
 lint:
@@ -57,6 +62,7 @@ endif
 
 ## Set up python interpreter environment
 create_environment:
+	cd $(PROJECT_DIR)
 ifeq (True,$(HAS_CONDA))
 		@echo ">>> Detected conda, creating conda environment."
 ifeq (3,$(findstring 3,$(PYTHON_INTERPRETER)))
