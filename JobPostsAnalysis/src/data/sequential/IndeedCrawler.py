@@ -1,13 +1,15 @@
 ## Sequential Scraping
-from logging import log
+import time, requests, argparse, json, itertools
+from typing import List, Dict, Union, Optional
+
+import random
 from bs4 import BeautifulSoup
 import pandas as pd
-import time, requests, argparse, json
-from typing import List, Dict, Union, Optional
+
 
 from proxyManager import ProxyManager
 from Crawler import Crawler
-from config import CONFIG
+from config import CONFIG, Query, JobInfo, JobDesc
 import logging
 from logzero import setup_logger
 
@@ -37,19 +39,22 @@ def get_args():
 
 # TODO: handle case when there are no more job posts
 class NojobError(Exception):
+    """No info scraped"""
     pass
 
 # Main 
 def main(args):
-    logger = setup_logger(name=__file__, logfile=CONFIG.log_path / 'seq_indeed.log', level=loglv[args.LOGLVL])
+    logger = setup_logger(name=__file__, logfile=CONFIG.log_path / 'seq_indeed.log', level=loglv[args.LOGLVL], maxBytes=1e6, backupCount=3)
     logger.debug(type(logger))
     start = time.time()
     # Initiate Indeed crawler
+
     crawler = Crawler()
     no_jobs = 0
     start_page = 0  # one input argument
-    end_page = 10  # one input argument
+    end_page = args.PAGE  # one input argument
     JobInfo = []
+    JobDesc = []
     loc_temp = args.LOCATIONS
     loc_temp = loc_temp.split(',')
     loc_temp = [x.strip() for x in loc_temp]
@@ -69,46 +74,99 @@ def main(args):
     titles = args.TITLES.split(',')
     logger.info(f'''
     \t- Locations to crawl: {locations}\n 
-    \t- Number of Pages to crawl per query: {args.PAGE}\n 
+    \t- Number of Pages to crawl per query: {end_page}\n 
     \t- Queries parameters: {params}\n
     \t- Job titles: {titles}''')
 
     print('\t- Starting Crawling ...')
-# # TODO: Parallelizing web scraping
-    for l in locations:
-        proxy_scraper = ProxyManager()
-        proxy_scraper.update_proxy_list()
-        for t in titles:
-            for page in range(start_page, end_page):
-                proxy = proxy_scraper.get_proxy()
-                params['q'] = t
-                params['l'] = l
-                params['start'] = page * no_jobs
-                logger.info(' Getting information from the provided URL...')
-                logger.debug(f"queue with {params}...")
-                divs = crawler.getJobPost(queries=params, proxy=proxy)
+    params_list = itertools.product(locations, titles)
+    proxy_scraper = ProxyManager()
+    jobInfo = []
+    jobDesc = []
+    for queries in params_list:
+        # TODO: Can parallelize here
+        start_page = 0
+        proxy_scraper.update_proxt_list()
+        while start_page <= end_page:
+            proxy = proxy_scraper.get_proxy()
+            query = Query(*queries, start_page)
+            query.sleep()
+            logger.info(f"queue with {query.__dict__}...")
+            try:
+                divs = crawler.getJobPost(queries=query.__dict__, proxy_scraper=proxy_scraper)
                 if divs is not None:
                     no_jobs = len(divs)
-                elif divs is None:
-                    logger.info("No more jobs to scrape!")
-                    continue
-                logger.info(f' The number of job postings found is {no_jobs}')
-                for div in divs:
-                    temp_info = crawler.getInfo(div)
-                    # TODO: Insert codes to retrieve job des and loc here
-                    temp_info['location'] = params['l']
-                    JobInfo.append(temp_info)
-                # TODO: Fix code to use database instead of csv file
-                # TODO: Ensure that if there are no jobs, crawler escape loop
-                logger.info(f" Done scraping for position {params['q']} at {params['l']}, job number from {params['start']}")
-                logger.info(f" Continue with next query")
-    data = pd.DataFrame(JobInfo)
-    data = data.drop_duplicates()
+                if not no_jobs:
+                    raise NojobError
+            except NojobError:
+                logger.info("Something's wrong, moving on...")
+                break
+            # TODO: Parallelize one more time here... 
+            for div in divs:
+                try:
+                    temp_info = JobInfo(*crawler.getInfo(div), query.location)
+                    logger.info("Getting job description...")
+                    jobdesc = JobDesc(temp_info.summarylink)
+                    # TODO: replace csv file with database
+                    jobInfo.append(temp_info.__dict__)
+                    jobDesc.append(jobdesc.__dict__)
+            logger.info(f" Done scraping for position {query.title} at {query.location} job number from {query.start}")
+            logger.info(f" Continue with next query")
+            start_page += 1
+    infoDf = pd.DataFrame(jobInfo)
+    infoDf = infoDf.drop_duplicates()
+    jobdescDf = pd.DataFrame(jobDesc)
+    jobdescDf = jobdescDf.drop_duplicates()
     logger.critical(f'Saving raw data to {str(CONFIG.data_path / "raw")}...')
-    data.to_csv(str(CONFIG.data_path / 'raw') + '/jobpostsRaw.csv', index=False)
+    jobdescDf.to_csv(str(CONFIG.data_path / 'raw' / 'jobdescRaw.csv'), index=False)
+    infoDf.to_csv(str(CONFIG.data_path / 'raw') + '/jobpostsRaw.csv', index=False)
     time.sleep(1)
     logger.info("Done scraping from Indeed!")
     logger.critical(f'It takes {(time.time() - start) / 60: .2f} minutes for execution')
+# # TODO: Parallelizing web scraping
+    # for l in locations:
+    #     proxy_scraper = ProxyManager()
+    #     for t in titles:
+    #         proxy_scraper.update_proxy_list()
+    #         for page in range(start_page, end_page):
+    #             randomSleep = random.randint(3,6)
+    #             logger.info(f"Sleep for {randomSleep}")
+    #             time.sleep(randomSleep)
+    #             logger.info(f"Start scraping ...")
+    #             proxy = proxy_scraper.get_proxy()
+    #             params['q'] = t
+    #             params['l'] = l
+    #             params['start'] = page * no_jobs
+    #             logger.info(' Getting information from the provided URL...')
+    #             logger.debug(f"queue with {params}...")
+    #             divs = crawler.getJobPost(queries=params, proxy=proxy)
+    #             # TODO: fix codes to account for when the job pages is less than end_page
+    #             # *Hint: the pagination class in ul shows the number of pages for a search query
+    #             if divs is not None:
+    #                 no_jobs = len(divs)
+    #             elif divs is None:
+    #                 logger.info("Something's wrong, moving on...")
+    #                 continue
+    #             logger.info(f' The number of job postings found is {no_jobs}')
+    #             for div in divs:
+    #                 temp_info = crawler.getInfo(div)
+    #                 # TODO: Insert codes to retrieve job des and loc here
+    #                 temp_info['location'] = params['l']
+    #                 logger.info(f"Getting job description...")
+    #                 jobdesc = crawler.getJobDes([temp_info['summarylink']])
+    #                 JobDesc.append(jobdesc)
+    #                 JobInfo.append(temp_info)
+    #             # TODO: Fix code to use database instead of csv file
+    #             # TODO: Ensure that if there are no jobs, crawler escape loop
+    #             logger.info(f" Done scraping for position {params['q']} at {params['l']}, job number from {params['start']}")
+    #             logger.info(f" Continue with next query")
+    # data = pd.DataFrame(JobInfo)
+    # data = data.drop_duplicates()
+    # logger.critical(f'Saving raw data to {str(CONFIG.data_path / "raw")}...')
+    # data.to_csv(str(CONFIG.data_path / 'raw') + '/jobpostsRaw.csv', index=False)
+    # time.sleep(1)
+    # logger.info("Done scraping from Indeed!")
+    # logger.critical(f'It takes {(time.time() - start) / 60: .2f} minutes for execution')
 
 if __name__ == "__main__":
     parser = get_args()

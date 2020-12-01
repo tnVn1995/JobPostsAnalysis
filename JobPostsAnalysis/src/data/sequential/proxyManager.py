@@ -1,5 +1,6 @@
 import datetime
 import logging
+import random
 from concurrent.futures import ThreadPoolExecutor
 
 import requests
@@ -64,7 +65,9 @@ class ProxyManager:
 
     def get_proxy(self):
         proxy = None
-        for k, v in self.proxies.items():
+        proxies = list(self.proxies.items())
+        random.shuffle(proxies)
+        for k, v in proxies:
             alive = v.get('alive')
             if alive:
                 return k

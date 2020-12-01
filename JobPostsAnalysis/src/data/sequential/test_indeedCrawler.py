@@ -36,17 +36,17 @@ class Test_single:
         queries, indeedCrawler, proxy_scraper = single_setup['queries'], single_setup['crawler'], single_setup['proxy_scraper']
         proxy_scraper.update_proxy_list()
         proxy = proxy_scraper.get_proxy()
-        divs = indeedCrawler.getJobPost(queries=queries, proxy = proxy)
+        divs = indeedCrawler.getJobPost(queries=queries, proxy_scraper=proxy_scraper)
         assert len(divs) > 0 # validate getJobPost results
         assert type(divs[0].text) == str #  
         temp_info = indeedCrawler.getInfo(divs[0])
         assert type(temp_info['title']) == str # Validate getInfo result
         assert len(temp_info) == 3
         link = temp_info['summarylink']
-        jobDesc = indeedCrawler.getJobDes([link])
-        assert isinstance(jobDesc, pd.DataFrame) # Validate get_jobdes result
-        assert type(jobDesc['description'].values[0]) == str
-        assert len(jobDesc['description'].values[0]) > 0
+        jobDesc = indeedCrawler.getJobDes(link)
+        assert isinstance(jobDesc, dict) # Validate get_jobdes result
+        assert type(jobDesc['description']) == str
+        assert len(jobDesc['description']) > 0
 
 
 class Test_multi:
@@ -57,12 +57,11 @@ class Test_multi:
         proxy_scraper.update_proxy_list()
         for loc in locations:
             for title in titles:
-                proxy = proxy_scraper.get_proxy()
                 for page in range(start_page + 1, end_page):
                     params['q'] = title
                     params['l'] = loc
                     params['start'] = page * no_jobs
-                    divs = indeedCrawler.getJobPost(queries=params, proxy=proxy)
+                    divs = indeedCrawler.getJobPost(queries=params, proxy_scraper=proxy_scraper)
                     no_jobs = len(divs)
                     for div in divs:
                         temp_info = indeedCrawler.getInfo(div)
