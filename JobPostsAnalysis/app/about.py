@@ -13,7 +13,7 @@ body = dbc.Container([
     html.H3("""
     About Me"""),
     html.Div([
-        html.Img(src="static/sf.jpg", 
+        html.Img(src="assets/static/sf.jpg", 
         style={"border":"1px solid #ddd", "border-radius": "4px", "padding": "5px", "width": "150px"})
     ])
 ])

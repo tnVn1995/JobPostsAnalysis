@@ -8,7 +8,7 @@ from analytics import App, build_graph
 from homepage import Homepage
 from about import About
 
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.UNITED])
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.FLATLY])
 
 app.config.suppress_callback_exceptions = True
 

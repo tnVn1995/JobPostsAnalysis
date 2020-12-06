@@ -11,25 +11,30 @@ body = dbc.Container(
     [  
         dbc.Row(
             [
-                dbc.Col(
-                  [
-                     html.H2("What The App Does"),
-                     html.P(
-                         """Instructions on how to use the app here
-                           """),
-                           dbc.Button("View details", color="secondary"),
-                   ],
-                  md=4,
-               ),
-              dbc.Col(
-                 [
-                     html.H2("Graph"),
-                     dcc.Graph(
-                         figure={"data": [{"x": [1, 2, 3], "y": [1, 4, 9]}]}
-                            ),
-                        ]
-                     ),
-                ]
+                html.Div([
+                html.H2("What The App Does", style={'text-align':'center'}),
+                html.P("""IInstructions on how to use the app hereInstructions on how to use the app her
+                Instructions on how to use the app hereInstructions on how to use the app her
+                Instructions on how to use the app hereInstructions on how to use the app her
+                eeenstructions on how to use the app here"""),
+                html.Br(),
+                html.P("""IInstructions on how to use the app hereInstructions on how to use the app her
+                Instructions on how to use the app hereInstructions on how to use the app her
+                Instructions on how to use the app hereInstructions on how to use the app her
+                eeenstructions on how to use the app here"""),
+                html.Br(),
+                html.P("""IInstructions on how to use the app hereInstructions on how to use the app her
+                Instructions on how to use the app hereInstructions on how to use the app her
+                Instructions on how to use the app hereInstructions on how to use the app her
+                eeenstructions on how to use the app here"""),
+                html.Br(),
+                html.P("""IInstructions on how to use the app hereInstructions on how to use the app her
+                Instructions on how to use the app hereInstructions on how to use the app her
+                Instructions on how to use the app hereInstructions on how to use the app her
+                eeenstructions on how to use the app here"""),
+                dbc.Button("View details", color="secondary"),
+            ], style={"align":"center"})
+            ]
             )
        ],
 className="mt-4",
@@ -38,7 +43,7 @@ className="mt-4",
 def Homepage():
     layout = html.Div([
     nav, 
-    dbc.Row([html.Img(src="/static/job-search-strategies.jpg", 
+    dbc.Row([html.Img(src="assets/static/job-search.jpg", 
     style={"width": "100vw", 
             "height": "40vw"})]),
     body

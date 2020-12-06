@@ -9,8 +9,8 @@ class CONFIG:
 
 @dataclass
 class Query:
-    location:str
-    title:str
+    l:str
+    q:str
     start:int
 
     def sleep(self, start:int=1, end:int=6):

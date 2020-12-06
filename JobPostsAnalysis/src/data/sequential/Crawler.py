@@ -67,7 +67,7 @@ class Crawler():
         CrawlerLogger.error(f"Stop scraping url {URL} after 5 failed attempts")
         return 
 
-    def getJobDes(self, summary_link:str, base_web:str='https://www.indeed.com') -> pd.DataFrame:
+    def getJobDes(self, summary_link:str, base_web:str='https://www.indeed.com') -> Union[List[str], None]:
         """[Get job descriptions from Indeed]
 
         Args:
